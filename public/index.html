@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Meme Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+
+        .btn-random {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+        }
+
+        .btn-custom {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+
+        .preview.has-content {
+            border-color: #4ecdc4;
+            background: white;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: #666;
+            font-size: 18px;
+        }
+
+        .preview-placeholder .emoji {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4ecdc4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #c62828;
+            display: none;
+        }
+
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2e7d32;
+            display: none;
+        }
+
+        .meme-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+            display: none;
+        }
+
+        .meme-info h4 {
+            margin-bottom: 10px;
+            color: #1976d2;
+        }
+
+        .meme-info p {
+            margin: 5px 0;
+            color: #424242;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 Random Meme Generator</h1>
+            <p>Generate hilarious memes instantly - no templates needed!</p>
+        </div>
+
+        <div class="content">
+            <div class="controls">
+                <div class="form-group">
+                    <label for="format-select">Choose Style:</label>
+                    <select id="format-select">
+                        <option value="classic">Classic Meme</option>
+                        <option value="modern">Modern Meme</option>
+                        <option value="gradient">Gradient Meme</option>
+                        <option value="colorful">Colorful Meme</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="top-text">Top Text (optional):</label>
+                    <input type="text" id="top-text" placeholder="Enter top text..." maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="bottom-text">Bottom Text (optional):</label>
+                    <input type="text" id="bottom-text" placeholder="Enter bottom text..." maxlength="100">
+                </div>
+
+                <div class="error-message" id="error-message"></div>
+                <div class="success-message" id="success-message"></div>
+                <div class="meme-info" id="meme-info"></div>
+
+                <div class="button-group">
+                    <button class="btn btn-random" id="random-btn">🎲 Random Meme</button>
+                    <button class="btn btn-custom" id="custom-btn">✨ Custom Meme</button>
+                </div>
+            </div>
+
+            <div class="preview" id="preview">
+                <div class="preview-placeholder" id="preview-placeholder">
+                    <div class="emoji">😄</div>
+                    <p>Click "Random Meme" for instant laughs!</p>
+                    <p>Or create your own custom meme!</p>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Generating your meme...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const formatSelect = document.getElementById('format-select');
+        const topTextInput = document.getElementById('top-text');
+        const bottomTextInput = document.getElementById('bottom-text');
+        const randomBtn = document.getElementById('random-btn');
+        const customBtn = document.getElementById('custom-btn');
+        const preview = document.getElementById('preview');
+        const previewPlaceholder = document.getElementById('preview-placeholder');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+        const memeInfo = document.getElementById('meme-info');
+
+        // Random meme handler
+        randomBtn.addEventListener('click', async function() {
+            showLoading();
+            hideMessages();
+
+            try {
+                const response = await fetch('/api/random-meme');
+                const data = await response.json();
+
+                if (data.success) {
+                    showGeneratedMeme(data.imageUrl);
+                    showMemeInfo(data);
+                    showSuccess('Random meme generated successfully!');
+                } else {
+                    showError(data.error || 'Failed to generate random meme');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Custom meme handler
+        customBtn.addEventListener('click', async function() {
+            const topText = topTextInput.value.trim();
+            const bottomText = bottomTextInput.value.trim();
+            const format = formatSelect.value;
+
+            if (!topText && !bottomText) {
+                showError('Please enter at least one text field');
+                return;
+            }
+
+            showLoading();
+            hideMessages();
+
+            try {
+                const response = await fetch('/api/generate-custom', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topText: topText,
+                        bottomText: bottomText,
+                        format: format
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showGeneratedMeme(data.imageUrl);
+                    showMemeInfo(data);
+                    showSuccess('Custom meme generated successfully!');
+                } else {
+                    showError(data.error || 'Failed to generate custom meme');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        function showGeneratedMeme(imageUrl) {
+            const img = document.createElement('img');
+            img.src = imageUrl + '?t=' + Date.now(); // Prevent caching
+            img.className = 'preview-image';
+            img.alt = 'Generated Meme';
+            
+            preview.innerHTML = '';
+            preview.appendChild(img);
+            preview.appendChild(loading);
+            preview.classList.add('has-content');
+        }
+
+        function showMemeInfo(data) {
+            const infoHtml = `
+                <h4>Meme Details:</h4>
+                <p><strong>Style:</strong> ${data.format}</p>
+                <p><strong>Top Text:</strong> ${data.topText || 'None'}</p>
+                <p><strong>Bottom Text:</strong> ${data.bottomText || 'None'}</p>
+            `;
+            memeInfo.innerHTML = infoHtml;
+            memeInfo.style.display = 'block';
+        }
+
+        function showPlaceholder() {
+            preview.innerHTML = '';
+            preview.appendChild(previewPlaceholder);
+            preview.appendChild(loading);
+            preview.classList.remove('has-content');
+        }
+
+        function showLoading() {
+            loading.style.display = 'block';
+            randomBtn.disabled = true;
+            customBtn.disabled = true;
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+            randomBtn.disabled = false;
+            customBtn.disabled = false;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            memeInfo.style.display = 'none';
+        }
+
+        // Generate a random meme on page load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                randomBtn.click();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
